@@ -337,16 +337,17 @@ class SystemTtsService : TextToSpeechService(), IEventDispatcher {
             var cfgId: Long? = getConfigIdFromVoiceName(request.voiceName ?: "").onFailure {
                 longToast(R.string.voice_name_bad_format)
                 callback.error(TextToSpeech.ERROR_INVALID_REQUEST)
-                callback.done()
                 return@runBlocking
             }.value
             synthesizerJob = mScope.launch {
+                var isStarted = false
                 mTtsManager?.synthesize(
                     params = SystemParams(text = request.charSequenceText.toString()),
                     forceConfigId = cfgId,
                     callback = object :
                         com.github.jing332.tts.synthesizer.SynthesisCallback {
                         override fun onSynthesizeStart(sampleRate: Int) {
+                            isStarted = true
                             callback.start(
                                 /* sampleRateInHz = */ sampleRate,
                                 /* audioFormat = */ AudioFormat.ENCODING_PCM_16BIT,
@@ -360,6 +361,9 @@ class SystemTtsService : TextToSpeechService(), IEventDispatcher {
 
                     }
                 )?.onSuccess {
+                    if (!isStarted)
+                        callback.start(16000, AudioFormat.ENCODING_PCM_16BIT, 1)
+
                     logger.debug { "done" }
                     callback.done()
                 }?.onFailure {
