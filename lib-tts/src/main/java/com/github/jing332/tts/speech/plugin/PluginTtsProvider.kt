@@ -46,6 +46,10 @@ open class PluginTtsProvider(
         if (mEngine == null)
             mEngine = TtsPluginEngineManager.get(context, plugin)
 
+        // Keep the runtime initialization path aligned with the plugin debugger,
+        // which calls onLoad() before getAudio().
+        mEngine?.onLoad()
+
         state = EngineState.Initialized
     }
 
