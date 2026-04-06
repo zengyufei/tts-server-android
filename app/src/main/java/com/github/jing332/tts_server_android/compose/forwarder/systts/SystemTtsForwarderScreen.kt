@@ -2,7 +2,9 @@ package com.github.jing332.tts_server_android.compose.forwarder.systts
 
 import android.content.Intent
 import android.content.IntentFilter
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,7 +15,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.jing332.compose.widgets.DenseOutlinedField
 import com.github.jing332.tts_server_android.R
 import com.github.jing332.tts_server_android.compose.forwarder.BasicConfigScreen
 import com.github.jing332.tts_server_android.compose.forwarder.BasicForwarderScreen
@@ -30,6 +34,7 @@ import com.github.jing332.tts_server_android.utils.MyTools
 fun SystemTtsForwarderScreen(cfgVM: ConfigViewModel = viewModel()) {
     val context = LocalContext.current
     var port by remember { SystemTtsForwarderConfig.port }
+    var callbackTimeoutMs by remember { SystemTtsForwarderConfig.callbackTimeoutMs }
     BasicForwarderScreen(
         topBar = {
             var wakeLockEnabled by remember { SystemTtsForwarderConfig.isWakeLockEnabled }
@@ -65,7 +70,22 @@ fun SystemTtsForwarderScreen(cfgVM: ConfigViewModel = viewModel()) {
                 onRunningChange = { isRunning = it },
                 switch = { context.switchSysTtsForwarder() },
                 port = port,
-                onPortChange = { port = it }
+                onPortChange = { port = it },
+                extraContent = {
+                    DenseOutlinedField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        label = { Text(stringResource(R.string.request_timeout)) },
+                        supportingText = { Text(text = stringResource(R.string.request_timeout_summary)) },
+                        value = callbackTimeoutMs.toString(),
+                        onValueChange = {
+                            kotlin.runCatching {
+                                callbackTimeoutMs = it.toLong().coerceAtLeast(1_000L)
+                            }
+                        }
+                    )
+                }
             )
         }) {
         "http://localhost:${port}"

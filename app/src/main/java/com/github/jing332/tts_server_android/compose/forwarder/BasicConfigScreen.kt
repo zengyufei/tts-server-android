@@ -2,6 +2,7 @@ package com.github.jing332.tts_server_android.compose.forwarder
 
 import android.content.IntentFilter
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -34,6 +35,7 @@ internal fun BasicConfigScreen(
     switch: () -> Unit,
     port: Int,
     onPortChange: (Int) -> Unit,
+    extraContent: @Composable (ColumnScope.() -> Unit) = {},
 ) {
     val context = LocalContext.current
     LocalBroadcastReceiver(intentFilter = intentFilter) { intent ->
@@ -61,6 +63,8 @@ internal fun BasicConfigScreen(
         LogScreen(
             modifier = Modifier.weight(1f), list = vm.logs, vm.logState
         )
+
+        extraContent()
 
         Row(Modifier.align(Alignment.CenterHorizontally)) {
             DenseOutlinedField(

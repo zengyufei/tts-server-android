@@ -18,4 +18,10 @@ object SystemTtsForwarderConfig {
         key = "isWakeLockEnabled",
         initialValue = false
     )
+
+    val callbackTimeoutMs = mutableDataSaverStateOf(
+        dataSaverInterface = pref,
+        key = "callbackTimeoutMs",
+        initialValue = 60_000L
+    )
 }

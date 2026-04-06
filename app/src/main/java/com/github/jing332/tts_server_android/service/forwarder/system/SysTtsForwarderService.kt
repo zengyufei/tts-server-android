@@ -19,6 +19,8 @@ import com.github.jing332.tts_server_android.service.forwarder.AbsForwarderServi
 import com.github.jing332.tts_server_android.service.systts.SystemTtsService
 import com.github.michaelbull.result.onFailure
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import java.io.File
 
 class SysTtsForwarderService(
@@ -53,7 +55,11 @@ class SysTtsForwarderService(
     private var mServer: SystemTtsForwardServer? = null
     private var mLocalTTS: LocalTtsProvider? = null
     private val mLocalTtsHelper by lazy { LocalTtsEngineHelper(this) }
-    private val androidTts by lazy { AndroidTtsEngine(this) }
+    private val androidTts by lazy {
+        AndroidTtsEngine(this) {
+            SystemTtsForwarderConfig.callbackTimeoutMs.value
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -74,24 +80,36 @@ class SysTtsForwarderService(
                 val pitch = params.pitch / 100f
 
                 logger.debug { "android tts init: $params" }
-                androidTts.init(params.engine)
+                if (!androidTts.init(params.engine)) {
+                    logger.warn { "android tts init failed: ${params.engine}" }
+                    return null
+                }
 
                 logger.debug { "android tts get file..." }
-                val file = androidTts.getFile(
-                    params.text,
-                    params.locale,
-                    voice = params.voice,
-                    extraParams = listOf(
-                        LocalTtsParameter(
-                            type = LocalTtsParameter.TYPE_BOOL,
-                            key = SystemTtsService.PARAM_BGM_ENABLED,
-                            value = false.toString()
+                val file = try {
+                    withTimeout(SystemTtsForwarderConfig.callbackTimeoutMs.value) {
+                        androidTts.getFile(
+                            params.text,
+                            params.locale,
+                            voice = params.voice,
+                            extraParams = listOf(
+                                LocalTtsParameter(
+                                    type = LocalTtsParameter.TYPE_BOOL,
+                                    key = SystemTtsService.PARAM_BGM_ENABLED,
+                                    value = false.toString()
+                                )
+                            ),
+                            params = AudioParams(speed = speed, pitch = pitch)
                         )
-                    ),
-                    params = AudioParams(speed = speed, pitch = pitch)
-                )
+                    }
+                } catch (_: TimeoutCancellationException) {
+                    logger.warn { "android tts callback timed out: $params" }
+                    androidTts.release()
+                    return null
+                }
 
                 return file.onFailure {
+                    androidTts.release()
                     return null
                 }.value
             }
@@ -130,6 +148,8 @@ class SysTtsForwarderService(
             mLocalTTS?.onDestroy()
             mLocalTTS = null
         }
+        androidTts.release()
+        mServer = null
     }
 
     private fun getSysTtsEngines(): List<TextToSpeech.EngineInfo> {
@@ -137,6 +157,12 @@ class SysTtsForwarderService(
         val engines = tts.engines
         tts.shutdown()
         return engines
+    }
+
+    override fun onDestroy() {
+        androidTts.release()
+        instance = null
+        super.onDestroy()
     }
 
 }
