@@ -2,12 +2,16 @@ package com.github.jing332.common.audio.exo
 
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.AuxEffectInfo
+import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.AudioSink.SINK_FORMAT_SUPPORTED_WITH_TRANSCODING
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import kotlin.math.roundToInt
 
 @UnstableApi
 /**
@@ -18,9 +22,12 @@ class DecoderAudioSink(
     private val onEndOfStream: () -> Unit
 ) : AudioSink {
     private var timeUs: Long = 0L
+    private var pcmEncoding: Int = C.ENCODING_PCM_16BIT
+    private var channelCount: Int = 1
 
     companion object {
         const val TAG = "DecoderAudioSink"
+        private val logger = KotlinLogging.logger(TAG)
     }
 
     override fun setListener(listener: AudioSink.Listener) {
@@ -39,6 +46,13 @@ class DecoderAudioSink(
         specifiedBufferSize: Int,
         outputChannels: IntArray?
     ) {
+        pcmEncoding = inputFormat.pcmEncoding
+        channelCount = inputFormat.channelCount.coerceAtLeast(1)
+        logger.info {
+            "[DecoderAudioSink] configure sampleRate=${inputFormat.sampleRate}, " +
+                "channelCount=${inputFormat.channelCount}, pcmEncoding=${inputFormat.pcmEncoding}, " +
+                "sampleMimeType=${inputFormat.sampleMimeType}"
+        }
     }
 
     override fun play() {
@@ -53,10 +67,55 @@ class DecoderAudioSink(
         presentationTimeUs: Long,
         encodedAccessUnitCount: Int
     ): Boolean {
-        onPcmBuffer.invoke(buffer)
+        onPcmBuffer.invoke(convertToMono16Bit(buffer))
         timeUs += presentationTimeUs
 
         return true
+    }
+
+    private fun convertToMono16Bit(buffer: ByteBuffer): ByteBuffer {
+        val src = buffer.slice().order(ByteOrder.LITTLE_ENDIAN)
+        if (pcmEncoding == C.ENCODING_PCM_16BIT && channelCount == 1) return src
+
+        return when (pcmEncoding) {
+            C.ENCODING_PCM_16BIT -> convert16BitToMono(src)
+            C.ENCODING_PCM_FLOAT -> convertFloatToMono16Bit(src)
+            else -> src
+        }
+    }
+
+    private fun convert16BitToMono(src: ByteBuffer): ByteBuffer {
+        val frameCount = src.remaining() / (channelCount * Short.SIZE_BYTES)
+        val out = ByteBuffer.allocate(frameCount * Short.SIZE_BYTES).order(ByteOrder.LITTLE_ENDIAN)
+
+        repeat(frameCount) {
+            var sum = 0
+            repeat(channelCount) {
+                sum += src.short.toInt()
+            }
+            out.putShort((sum / channelCount).toShort())
+        }
+
+        out.flip()
+        return out
+    }
+
+    private fun convertFloatToMono16Bit(src: ByteBuffer): ByteBuffer {
+        val frameCount = src.remaining() / (channelCount * Float.SIZE_BYTES)
+        val out = ByteBuffer.allocate(frameCount * Short.SIZE_BYTES).order(ByteOrder.LITTLE_ENDIAN)
+
+        repeat(frameCount) {
+            var sum = 0f
+            repeat(channelCount) {
+                sum += src.float
+            }
+
+            val mono = (sum / channelCount).coerceIn(-1f, 1f)
+            out.putShort((mono * Short.MAX_VALUE).roundToInt().toShort())
+        }
+
+        out.flip()
+        return out
     }
 
     override fun playToEndOfStream() = onEndOfStream()

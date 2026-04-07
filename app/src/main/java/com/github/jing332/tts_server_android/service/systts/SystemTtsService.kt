@@ -348,6 +348,7 @@ class SystemTtsService : TextToSpeechService(), IEventDispatcher {
                         com.github.jing332.tts.synthesizer.SynthesisCallback {
                         override fun onSynthesizeStart(sampleRate: Int) {
                             isStarted = true
+                            logger.info { "[SystemTtsService] onSynthesizeStart sampleRate=$sampleRate, textLength=${text.length}" }
                             callback.start(
                                 /* sampleRateInHz = */ sampleRate,
                                 /* audioFormat = */ AudioFormat.ENCODING_PCM_16BIT,

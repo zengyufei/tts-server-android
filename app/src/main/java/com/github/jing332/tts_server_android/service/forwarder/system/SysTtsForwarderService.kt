@@ -22,6 +22,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import java.io.File
+import java.io.RandomAccessFile
 
 class SysTtsForwarderService(
     override val port: Int = SystemTtsForwarderConfig.port.value,
@@ -111,7 +112,26 @@ class SysTtsForwarderService(
                 return file.onFailure {
                     androidTts.release()
                     return null
-                }.value
+                }.value.also { wav ->
+                    runCatching {
+                        RandomAccessFile(wav, "r").use { raf ->
+                            val header = ByteArray(44)
+                            val read = raf.read(header)
+                            logger.info {
+                                "[Forwarder] wavFile path=${wav.absolutePath}, size=${wav.length()}, headerRead=$read, " +
+                                    "riff=${header.copyOfRange(0, 4).decodeToString()}, " +
+                                    "wave=${header.copyOfRange(8, 12).decodeToString()}, " +
+                                    "fmt=${header.copyOfRange(12, 16).decodeToString()}, " +
+                                    "audioFormat=${u16le(header, 20)}, channels=${u16le(header, 22)}, " +
+                                    "sampleRate=${u32le(header, 24)}, byteRate=${u32le(header, 28)}, " +
+                                    "blockAlign=${u16le(header, 32)}, bitsPerSample=${u16le(header, 34)}, " +
+                                    "dataTag=${header.copyOfRange(36, 40).decodeToString()}, dataSize=${u32le(header, 40)}"
+                            }
+                        }
+                    }.onFailure {
+                        logger.warn(it) { "[Forwarder] failed to inspect wav header" }
+                    }
+                }
             }
 
             override suspend fun voices(engine: String): List<Voice> {
@@ -163,6 +183,17 @@ class SysTtsForwarderService(
         androidTts.release()
         instance = null
         super.onDestroy()
+    }
+
+    private fun u16le(data: ByteArray, offset: Int): Int {
+        return (data[offset].toInt() and 0xFF) or ((data[offset + 1].toInt() and 0xFF) shl 8)
+    }
+
+    private fun u32le(data: ByteArray, offset: Int): Long {
+        return (data[offset].toLong() and 0xFF) or
+            ((data[offset + 1].toLong() and 0xFF) shl 8) or
+            ((data[offset + 2].toLong() and 0xFF) shl 16) or
+            ((data[offset + 3].toLong() and 0xFF) shl 24)
     }
 
 }
