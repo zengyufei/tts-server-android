@@ -97,7 +97,7 @@ internal fun ListManagerScreen(
     if (showQuickEdit != null) {
         QuickEditBottomSheet(onDismissRequest = {
             dbm.systemTtsV2.insert(showQuickEdit!!)
-            if (showQuickEdit?.isEnabled == true) SystemTtsService.notifyUpdateConfig()
+            SystemTtsService.notifyUpdateConfig()
             showQuickEdit = null
         }, systts = showQuickEdit!!, onSysttsChange = {
             showQuickEdit = it
@@ -190,6 +190,7 @@ internal fun ListManagerScreen(
             onDismissRequest = { deleteTts = null }, content = deleteTts?.displayName ?: ""
         ) {
             dbm.systemTtsV2.delete(deleteTts!!)
+            SystemTtsService.notifyUpdateConfig()
             deleteTts = null
         }
     }
@@ -304,6 +305,7 @@ internal fun ListManagerScreen(
                                 toggleableState = checkState,
                                 onToggleableStateChange = {
                                     vm.updateGroupEnable(groupWithSystemTts, it)
+                                    SystemTtsService.notifyUpdateConfig()
                                 },
                                 onClick = {
                                     dbm.systemTtsV2.updateGroup(g.copy(isExpanded = !g.isExpanded))
@@ -311,6 +313,7 @@ internal fun ListManagerScreen(
                                 onDelete = {
                                     dbm.systemTtsV2.delete(*groupWithSystemTts.list.toTypedArray())
                                     dbm.systemTtsV2.deleteGroup(g)
+                                    SystemTtsService.notifyUpdateConfig()
                                 },
                                 onRename = {
                                     dbm.systemTtsV2.updateGroup(g.copy(name = it))
@@ -368,7 +371,7 @@ internal fun ListManagerScreen(
                                     enabled = item.isEnabled,
                                     onEnabledChange = {
                                         vm.updateTtsEnabled(item, it)
-                                        if (it) SystemTtsService.notifyUpdateConfig()
+                                        SystemTtsService.notifyUpdateConfig()
                                     },
                                     desc = descriptor.desc,
                                     params = descriptor.bottom,

@@ -32,10 +32,10 @@ interface PluginDao {
     @Update
     fun update(vararg data: Plugin)
 
-    @Query("SELECT * FROM plugin WHERE pluginId = :pluginId ")
+    @Query("SELECT * FROM plugin WHERE pluginId = :pluginId ORDER BY id DESC LIMIT 1")
     fun getByPluginId(pluginId: String): Plugin?
 
-    @Query("SELECT * FROM plugin WHERE pluginId = :pluginId AND isEnabled")
+    @Query("SELECT * FROM plugin WHERE pluginId = :pluginId AND isEnabled ORDER BY id DESC LIMIT 1")
     fun getEnabled(pluginId: String): Plugin?
 
     fun insertOrUpdate(vararg args: Plugin) {

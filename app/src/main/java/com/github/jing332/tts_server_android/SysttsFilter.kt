@@ -16,18 +16,25 @@ class SysttsFilter : Filter<ILoggingEvent>() {
     companion object {
         const val TAG = "SysttsFilter"
         const val ACTION_ON_LOG = "SystemFilter.SYSTTS_ON_LOG"
+        private const val JS_CONSOLE_LOGGER = "JS-Console"
+        private const val JS_PREFIX = "[PluginJS] "
         private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
     }
 
     override fun decide(event: ILoggingEvent): FilterReply {
 
-        return if (event.loggerName == SystemTtsService.TAG) {
+        return if (event.loggerName == SystemTtsService.TAG || event.loggerName == JS_CONSOLE_LOGGER) {
+            val msg = if (event.loggerName == JS_CONSOLE_LOGGER) {
+                JS_PREFIX + event.message
+            } else {
+                event.message
+            }
             SysttsLogger.log(
                 LogEntry(
                     level = event.level.toString().toLogLevel(),
                     time = LocalDateTimeUtil.of(event.timeStamp, TimeZone.getDefault())
                         .format(dateFormatter),
-                    message = event.message
+                    message = msg
                 )
             )
 

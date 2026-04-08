@@ -28,6 +28,7 @@ fun PluginImportBottomSheet(onDismissRequest: () -> Unit) {
             },
             onSelectedList = {
                 dbm.pluginDao.insert(*it.map { plugin -> plugin as Plugin }.toTypedArray())
+                refreshPluginRuntimeNow()
 
                 it.size
             }

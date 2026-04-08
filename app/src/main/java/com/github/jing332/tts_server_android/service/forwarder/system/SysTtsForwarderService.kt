@@ -13,6 +13,7 @@ import com.github.jing332.tts.speech.local.AndroidTtsEngine
 import com.github.jing332.tts.speech.local.LocalTtsProvider
 import com.github.jing332.tts_server_android.App
 import com.github.jing332.tts_server_android.R
+import com.github.jing332.tts_server_android.SysttsLogger
 import com.github.jing332.tts_server_android.conf.SystemTtsForwarderConfig
 import com.github.jing332.tts_server_android.help.LocalTtsEngineHelper
 import com.github.jing332.tts_server_android.service.forwarder.AbsForwarderService
@@ -55,6 +56,9 @@ class SysTtsForwarderService(
 
     private var mServer: SystemTtsForwardServer? = null
     private var mLocalTTS: LocalTtsProvider? = null
+    private val mSystemTtsLogListener = SysttsLogger.LogListener {
+        sendLog(it)
+    }
     private val mLocalTtsHelper by lazy { LocalTtsEngineHelper(this) }
     private val androidTts by lazy {
         AndroidTtsEngine(this) {
@@ -64,6 +68,7 @@ class SysTtsForwarderService(
 
     override fun onCreate() {
         super.onCreate()
+        SysttsLogger.register(mSystemTtsLogListener)
         instance = this
     }
 
@@ -181,6 +186,7 @@ class SysTtsForwarderService(
 
     override fun onDestroy() {
         androidTts.release()
+        SysttsLogger.unregister(mSystemTtsLogListener)
         instance = null
         super.onDestroy()
     }

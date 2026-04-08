@@ -52,7 +52,10 @@ class PluginManagerActivity : ComposeActivity() {
                                 checkNotNull(sharedVM.getOnce(NavRoutes.PluginEdit.KEY_DATA)) { "No Plugin Data" }
                             }
 
-                            PluginEditorScreen(plugin, onSave = { dbm.pluginDao.insert(it) })
+                            PluginEditorScreen(plugin, onSave = {
+                                dbm.pluginDao.insert(it)
+                                refreshPluginRuntimeNow()
+                            })
                         }
                     }
                 }

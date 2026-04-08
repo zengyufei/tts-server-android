@@ -17,4 +17,11 @@ object TtsPluginEngineManager : AbstractCachedManager<String, TtsPluginUiEngineV
             engine
         }
     }
+
+    fun expireAll() {
+        cache.removeAll {
+            it.onStop()
+            true
+        }
+    }
 }

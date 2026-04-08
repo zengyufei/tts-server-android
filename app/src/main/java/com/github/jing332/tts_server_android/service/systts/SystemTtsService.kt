@@ -331,6 +331,13 @@ class SystemTtsService : TextToSpeechService(), IEventDispatcher {
 
         val enabledBgm = request.params.getBoolean(PARAM_BGM_ENABLED, true)
         mTtsManager?.context?.cfg?.bgmEnabled = { enabledBgm }
+        val reqSpeed = (request.speechRate.takeIf { it > 0 } ?: 100) / 100f
+        val reqPitch = (request.pitch.takeIf { it > 0 } ?: 100) / 100f
+        val reqVolume = request.params
+            .getString(TextToSpeech.Engine.KEY_PARAM_VOLUME)
+            ?.toFloatOrNull()
+            ?.coerceIn(0f, 1f)
+            ?: 1f
 
         runBlocking {
              // If the voiceName is not empty, get the configuration ID from the voiceName.
@@ -342,7 +349,12 @@ class SystemTtsService : TextToSpeechService(), IEventDispatcher {
             synthesizerJob = mScope.launch {
                 var isStarted = false
                 mTtsManager?.synthesize(
-                    params = SystemParams(text = request.charSequenceText.toString()),
+                    params = SystemParams(
+                        text = request.charSequenceText.toString(),
+                        speed = reqSpeed,
+                        volume = reqVolume,
+                        pitch = reqPitch
+                    ),
                     forceConfigId = cfgId,
                     callback = object :
                         com.github.jing332.tts.synthesizer.SynthesisCallback {

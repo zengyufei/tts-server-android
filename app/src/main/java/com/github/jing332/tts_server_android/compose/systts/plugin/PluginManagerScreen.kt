@@ -102,6 +102,7 @@ fun PluginManagerScreen(sharedVM: SharedViewModel, onFinishActivity: () -> Unit)
         val plugin = showDeleteDialog!!
         ConfigDeleteDialog(onDismissRequest = { showDeleteDialog = null }, content = plugin.name) {
             dbm.pluginDao.delete(plugin)
+            refreshPluginRuntimeNow()
             showDeleteDialog = null
         }
     }
@@ -115,6 +116,7 @@ fun PluginManagerScreen(sharedVM: SharedViewModel, onFinishActivity: () -> Unit)
         }
         PluginVarsBottomSheet(onDismissRequest = {
             dbm.pluginDao.update(plugin)
+            refreshPluginRuntimeNow()
             showVarsSettings = null
         }, plugin = plugin) {
             plugin = it
@@ -242,12 +244,14 @@ fun PluginManagerScreen(sharedVM: SharedViewModel, onFinishActivity: () -> Unit)
                         isEnabled = item.isEnabled,
                         onEnabledChange = {
                             dbm.pluginDao.update(item.copy(isEnabled = it))
+                            refreshPluginRuntimeNow()
                         },
                         onEdit = { onEdit(item) },
                         onSetVars = { showVarsSettings = item },
                         onDelete = { showDeleteDialog = item },
                         onClear = {
                             PluginManager(item).clearCache()
+                            refreshPluginRuntimeNow()
                             context.longToast(R.string.clear_cache_ok)
                         },
                         onExport = { showExportConfig = listOf(item) }
