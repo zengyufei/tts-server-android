@@ -1,4 +1,4 @@
-package com.github.jing332.tts_server_android.compose.systts.plugin
+﻿package com.github.jing332.tts_server_android.compose.systts.plugin
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,7 +28,7 @@ fun PluginImportBottomSheet(onDismissRequest: () -> Unit) {
             },
             onSelectedList = {
                 dbm.pluginDao.insert(*it.map { plugin -> plugin as Plugin }.toTypedArray())
-                refreshPluginRuntimeNow()
+                PluginRuntimeRefresher.refreshNow()
 
                 it.size
             }

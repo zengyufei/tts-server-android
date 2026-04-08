@@ -1,4 +1,4 @@
-package com.github.jing332.tts_server_android.compose.systts.plugin
+﻿package com.github.jing332.tts_server_android.compose.systts.plugin
 
 import android.content.Intent
 import android.os.Bundle
@@ -54,7 +54,7 @@ class PluginManagerActivity : ComposeActivity() {
 
                             PluginEditorScreen(plugin, onSave = {
                                 dbm.pluginDao.insert(it)
-                                refreshPluginRuntimeNow()
+                                PluginRuntimeRefresher.refreshNow()
                             })
                         }
                     }

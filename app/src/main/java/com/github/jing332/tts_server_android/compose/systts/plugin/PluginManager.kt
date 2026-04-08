@@ -1,7 +1,10 @@
 package com.github.jing332.tts_server_android.compose.systts.plugin
 
 import com.github.jing332.database.entities.plugin.Plugin
+import com.github.jing332.tts.CachedEngineManager
+import com.github.jing332.tts.speech.plugin.TtsPluginEngineManager
 import com.github.jing332.tts_server_android.constant.AppConst
+import com.github.jing332.tts_server_android.service.systts.SystemTtsService
 import java.io.File
 
 class PluginManager(private val plugin: Plugin) {
@@ -20,4 +23,17 @@ class PluginManager(private val plugin: Plugin) {
         } catch (_: Exception) {
         }
     }
+}
+
+object PluginRuntimeRefresher {
+    fun refreshNow() {
+        CachedEngineManager.expireAll()
+        TtsPluginEngineManager.expireAll()
+        SystemTtsService.notifyUpdateConfig()
+    }
+}
+
+@Suppress("unused")
+internal fun refreshPluginRuntimeNow() {
+    PluginRuntimeRefresher.refreshNow()
 }

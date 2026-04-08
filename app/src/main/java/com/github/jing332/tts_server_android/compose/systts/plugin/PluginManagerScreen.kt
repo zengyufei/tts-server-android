@@ -1,4 +1,4 @@
-package com.github.jing332.tts_server_android.compose.systts.plugin
+﻿package com.github.jing332.tts_server_android.compose.systts.plugin
 
 import android.content.Intent
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -102,7 +102,7 @@ fun PluginManagerScreen(sharedVM: SharedViewModel, onFinishActivity: () -> Unit)
         val plugin = showDeleteDialog!!
         ConfigDeleteDialog(onDismissRequest = { showDeleteDialog = null }, content = plugin.name) {
             dbm.pluginDao.delete(plugin)
-            refreshPluginRuntimeNow()
+            PluginRuntimeRefresher.refreshNow()
             showDeleteDialog = null
         }
     }
@@ -116,7 +116,7 @@ fun PluginManagerScreen(sharedVM: SharedViewModel, onFinishActivity: () -> Unit)
         }
         PluginVarsBottomSheet(onDismissRequest = {
             dbm.pluginDao.update(plugin)
-            refreshPluginRuntimeNow()
+            PluginRuntimeRefresher.refreshNow()
             showVarsSettings = null
         }, plugin = plugin) {
             plugin = it
@@ -244,14 +244,14 @@ fun PluginManagerScreen(sharedVM: SharedViewModel, onFinishActivity: () -> Unit)
                         isEnabled = item.isEnabled,
                         onEnabledChange = {
                             dbm.pluginDao.update(item.copy(isEnabled = it))
-                            refreshPluginRuntimeNow()
+                            PluginRuntimeRefresher.refreshNow()
                         },
                         onEdit = { onEdit(item) },
                         onSetVars = { showVarsSettings = item },
                         onDelete = { showDeleteDialog = item },
                         onClear = {
                             PluginManager(item).clearCache()
-                            refreshPluginRuntimeNow()
+                            PluginRuntimeRefresher.refreshNow()
                             context.longToast(R.string.clear_cache_ok)
                         },
                         onExport = { showExportConfig = listOf(item) }

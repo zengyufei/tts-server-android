@@ -2,9 +2,9 @@ name: Build Test
 
 on:
   push:
-    branches:
-      - "master"
-      - "compose"
+ #   branches:
+ #     - "master"
+ #     - "compose"
     paths-ignore:
       - "**.md"
   workflow_dispatch:

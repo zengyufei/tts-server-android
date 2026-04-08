@@ -4,8 +4,10 @@ on:
   push:
     branches:
       - "compose"
-    paths:
-      - "CHANGELOG.md"
+    paths-ignore:
+      - "**.md"
+   # paths:
+   #   - "CHANGELOG.md"
   workflow_dispatch:
 
 jobs:
