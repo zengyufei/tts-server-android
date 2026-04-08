@@ -212,7 +212,8 @@ open class TtsPluginEngineV2(val context: Context, var plugin: Plugin) {
         volume: Float = 1f,
         pitch: Float = 1f,
     ): InputStream {
-        val r = (rate * 50f).toInt()
+        // Keep plugin rate in x-speed form (e.g. 1.1x), without extra scaling.
+        val r = rate
         val v = (volume * 50f).toInt()
         val p = (pitch * 50f).toInt()
         val result = try {
