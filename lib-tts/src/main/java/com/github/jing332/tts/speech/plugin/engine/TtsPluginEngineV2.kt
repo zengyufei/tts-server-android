@@ -27,6 +27,7 @@ import java.io.InputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import java.lang.IllegalArgumentException
+import kotlin.math.roundToInt
 
 open class TtsPluginEngineV2(val context: Context, var plugin: Plugin) {
     companion object {
@@ -213,7 +214,7 @@ open class TtsPluginEngineV2(val context: Context, var plugin: Plugin) {
         pitch: Float = 1f,
     ): InputStream {
         // Keep plugin rate in x-speed form (e.g. 1.1x), without extra scaling.
-        val r = rate
+        val r = (rate * 10f).roundToInt() / 10f
         val v = (volume * 50f).toInt()
         val p = (pitch * 50f).toInt()
         val result = try {
