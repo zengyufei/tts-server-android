@@ -19,9 +19,7 @@ object TtsPluginEngineManager : AbstractCachedManager<String, TtsPluginUiEngineV
     }
 
     fun expireAll() {
-        cache.removeAll {
-            it.onStop()
-            true
-        }
+        // TimedCache#removeAll may throw UnsupportedOperationException on non-removable iterators.
+        cache.clear()
     }
 }

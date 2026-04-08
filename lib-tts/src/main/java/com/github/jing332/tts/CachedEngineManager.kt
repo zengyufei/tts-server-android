@@ -36,9 +36,8 @@ object CachedEngineManager :
 
     fun expireAll() {
         logger.atDebug { message = "Expire all cached engine" }
-        cache.removeAll {
-            it.onDestroy()
-            true
-        }
+        // TimedCache#removeAll may throw UnsupportedOperationException on some iterator
+        // implementations (cache values iterator is non-removable). Prefer clear() here.
+        cache.clear()
     }
 }
