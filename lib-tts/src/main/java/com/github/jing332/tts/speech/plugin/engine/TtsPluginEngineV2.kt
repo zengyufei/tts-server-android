@@ -27,8 +27,7 @@ import java.io.InputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import java.lang.IllegalArgumentException
-import java.math.BigDecimal
-import java.math.RoundingMode
+import kotlin.math.roundToInt
 
 open class TtsPluginEngineV2(val context: Context, var plugin: Plugin) {
     companion object {
@@ -214,8 +213,8 @@ open class TtsPluginEngineV2(val context: Context, var plugin: Plugin) {
         volume: Float = 1f,
         pitch: Float = 1f,
     ): InputStream {
-        // Keep plugin rate in x-speed form (e.g. 1.1x), without extra scaling.
-        val r = BigDecimal(rate.toString()).setScale(1, RoundingMode.HALF_UP).toDouble()
+        // Convert x-speed to plugin delta steps: 1.0 -> 0, 1.3 -> 3, 0.8 -> -2.
+        val r = ((rate - 1f) * 10f).roundToInt()
         val v = (volume * 50f).toInt()
         val p = (pitch * 50f).toInt()
         val result = try {

@@ -331,9 +331,7 @@ class SystemTtsService : TextToSpeechService(), IEventDispatcher {
 
         val enabledBgm = request.params.getBoolean(PARAM_BGM_ENABLED, true)
         mTtsManager?.context?.cfg?.bgmEnabled = { enabledBgm }
-        // Android TTS speechRate uses 100 as baseline. Convert it to plugin
-        // delta steps: 100 -> 0, 130 -> 3, 80 -> -2.
-        val reqSpeed = ((request.speechRate.takeIf { it > 0 } ?: 100) - 100) / 10f
+        val reqSpeed = (request.speechRate.takeIf { it > 0 } ?: 100) / 100f
         val reqPitch = (request.pitch.takeIf { it > 0 } ?: 100) / 100f
         val reqVolume = request.params
             .getString(TextToSpeech.Engine.KEY_PARAM_VOLUME)
