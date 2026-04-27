@@ -76,7 +76,7 @@ class SystemTtsForwardServer(val port: Int, val callback: Callback) : Server {
                     val locale = call.parameters["locale"] ?: ""
                     val voice = call.parameters["voice"] ?: ""
                     val speed = (call.parameters["rate"] ?: call.parameters["speed"])
-                        ?.toIntOrNull() ?: 50
+                        ?.toIntOrNull() ?: 10
                     val pitch = call.parameters["pitch"]?.toIntOrNull() ?: 100
 
                     handleTts(

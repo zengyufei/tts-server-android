@@ -10,6 +10,6 @@ data class TtsParams(
     val engine: String = "",
     val locale: String = "",
     val voice: String = "",
-    val speed: Int = 50,
+    val speed: Int = 10,
     val pitch: Int = 100,
 )

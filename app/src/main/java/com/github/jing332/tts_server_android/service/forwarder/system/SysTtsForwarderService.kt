@@ -82,7 +82,7 @@ class SysTtsForwarderService(
             }
 
             override suspend fun tts(params: TtsParams): File? {
-                val speed = (params.speed + 100) / 100f
+                val speed = params.speed / 10f
                 val pitch = params.pitch / 100f
 
                 logger.debug { "android tts init: $params" }
